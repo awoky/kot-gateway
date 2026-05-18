@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>KoT 打刻</title>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KoT打刻">
+<meta name="theme-color" content="#F2EBD6">
+<style>
+  :root{--cream:#F2EBD6;--ink:#161310;--green:#2f6b3f;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,system-ui,"Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--cream);color:var(--ink);
+    padding:max(16px,env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+    max-width:460px;margin-inline:auto;min-height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+  img.m{width:140px;height:140px;object-fit:contain}
+  h1{font-size:1.15rem;font-weight:800}
+  p{font-size:.9rem;line-height:1.5;opacity:.75}
+  .btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+  a.b,button{font-family:inherit;font-size:.95rem;font-weight:800;padding:14px;border-radius:13px;
+    border:2px solid var(--ink);width:100%;cursor:pointer;text-decoration:none;display:block;text-align:center}
+  a.kot{background:var(--green);color:var(--cream);border-color:var(--green)}
+  a.open{background:var(--ink);color:var(--cream)}
+  button{background:transparent;color:var(--ink)}
+  button:active,a.b:active{opacity:.7}
+  small{font-size:.72rem;opacity:.5;margin-top:4px}
+  #wrap{display:none}
+  #boot{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .sp{width:34px;height:34px;border:3px solid #1613104d;border-top-color:var(--ink);
+    border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <img class="m" src="./mascot.png" alt="">
+  <div class="sp"></div>
+  <p>接続を確認しています…</p>
+</div>
+
+<div id="wrap">
+  <img class="m" src="./mascot.png" alt="">
+  <h1>自宅 Mac に接続できません</h1>
+  <p>打刻コンソールは自宅 Mac が起動している時だけ開けます。<br>外出中などで Mac が休止していると、この画面になります。</p>
+  <div class="btns">
+    <a class="b kot" href="https://s2.ta.kingoftime.jp/independent/recorder2/personal/" target="_blank" rel="noopener">KoT 純正ページで打刻する</a>
+    <a class="b open" id="openBtn" href="#">打刻コンソールを開く（再試行）</a>
+    <button onclick="location.reload()">接続を再確認</button>
+  </div>
+  <small>退勤リマインドは Pushover で届きます。打刻は上の KoT 純正でも可能です。</small>
+</div>
+
+<script>
+// 自宅 Mac の受付（Tailscale Serve の HTTPS）
+var MAC = "https://athcl11227509.tail1e1da2.ts.net";
+// トークンは URL の # 以降（fragment＝静的ホストに送られない）から取得
+// ブックマーク例:  https://<gateway>/#t=<KOT_SECRET>
+var hp = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+var T = hp.get("t") || "";
+var MODE = hp.get("mode") || "";
+function launcherURL(){
+  var u = MAC + "/?";
+  if (T) u += "token=" + encodeURIComponent(T);
+  if (MODE) u += (T ? "&" : "") + "mode=" + encodeURIComponent(MODE);
+  return u;
+}
+document.getElementById("openBtn").setAttribute("href", launcherURL());
+
+function showFallback(){
+  document.getElementById("boot").style.display = "none";
+  document.getElementById("wrap").style.display = "block";
+}
+function goLauncher(){ location.replace(launcherURL()); }
+
+// 生存確認: Mac receiver の /health へ no-cors fetch（到達=resolve, 不通=reject/timeout）
+(function(){
+  var done = false;
+  var ctrl = new AbortController();
+  var to = setTimeout(function(){ if(!done){ done=true; ctrl.abort(); showFallback(); } }, 4500);
+  fetch(MAC + "/health", { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
+    .then(function(){ if(done) return; done=true; clearTimeout(to); goLauncher(); })
+    .catch(function(){ if(done) return; done=true; clearTimeout(to); showFallback(); });
+})();
+</script>
+</body>
+</html>
