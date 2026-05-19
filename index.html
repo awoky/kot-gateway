@@ -7,27 +7,36 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="theme-color" content="#F2EBD6">
 <style>
-  :root{--cream:#F2EBD6;--ink:#161310;--green:#2f6b3f;}
+  :root{--cream:#F2EBD6;--cream2:#EFE6CC;--ink:#161310;--green:#2f6b3f;--red:#b4451f;--amber:#9a6a16;}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{font-family:-apple-system,system-ui,"Hiragino Kaku Gothic ProN",sans-serif;
-    background:var(--cream);color:var(--ink);
-    padding:max(16px,env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
-    max-width:460px;margin-inline:auto;min-height:100%;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
-  img.m{width:140px;height:140px;object-fit:contain}
-  h1{font-size:1.15rem;font-weight:800}
-  p{font-size:.9rem;line-height:1.5;opacity:.75}
-  .btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
-  a.b,button{font-family:inherit;font-size:.95rem;font-weight:800;padding:14px;border-radius:13px;
+    background:var(--cream);color:var(--ink);line-height:1.3;
+    padding:max(10px,env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+    max-width:460px;margin-inline:auto;min-height:100%;display:flex;flex-direction:column;gap:14px}
+  /* ↓ ui.html と同じヘッダ＝開いた瞬間「アプリの画面」に見える */
+  .hdr{display:flex;align-items:center;gap:10px;padding:1px 2px 0}
+  .ava{width:50px;height:50px;object-fit:contain;flex:0 0 auto;margin:-4px 0}
+  .hdr .ttl{font-weight:800;font-size:.98rem;letter-spacing:.01em}
+  .hdr .sub{font-size:.68rem;opacity:.6}
+  .pill{display:inline-block;font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:999px;
+    border:2px solid var(--amber);background:var(--amber);color:var(--cream);margin-top:3px}
+  .pill.off{border-color:var(--red);background:var(--red)}
+  .clock{margin-left:auto;text-align:right}
+  .clock .t{font-weight:800;font-size:1.32rem;font-variant-numeric:tabular-nums;line-height:1}
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+  img.m{width:128px;height:128px;object-fit:contain}
+  h1{font-size:1.1rem;font-weight:800}
+  p{font-size:.86rem;line-height:1.55;opacity:.75}
+  .btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:4px}
+  a.b,button{font-family:inherit;font-size:.93rem;font-weight:800;padding:13px;border-radius:12px;
     border:2px solid var(--ink);width:100%;cursor:pointer;text-decoration:none;display:block;text-align:center}
   a.kot{background:var(--green);color:var(--cream);border-color:var(--green)}
   a.open{background:var(--ink);color:var(--cream)}
-  button{background:transparent;color:var(--ink)}
-  button:active,a.b:active{opacity:.7}
-  small{font-size:.72rem;opacity:.5;margin-top:4px}
+  button.re{background:transparent;color:var(--ink)}
+  a.b:active,button:active{opacity:.7}
+  small{font-size:.72rem;opacity:.5;margin-top:4px;display:block}
   #wrap{display:none}
-  #boot{display:flex;flex-direction:column;align-items:center;gap:12px}
   .sp{width:34px;height:34px;border:3px solid #1613104d;border-top-color:var(--ink);
     border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -35,22 +44,35 @@
 </head>
 <body>
 
-<div id="boot">
-  <img class="m" src="./mascot.png" alt="">
-  <div class="sp"></div>
-  <p>接続を確認しています…</p>
+<div class="hdr">
+  <img class="ava" src="./mascot.png" alt="">
+  <div>
+    <div class="ttl">KoT 打刻</div>
+    <div class="sub" id="dateSub">—</div>
+    <span class="pill" id="pill">接続確認中</span>
+  </div>
+  <div class="clock"><div class="t" id="clock">--:--</div></div>
 </div>
 
-<div id="wrap">
-  <img class="m" src="./mascot.png" alt="">
-  <h1>自宅 Mac に接続できません</h1>
-  <p>打刻コンソールは自宅 Mac が起動している時だけ開けます。<br>外出中などで Mac が休止していると、この画面になります。</p>
-  <div class="btns">
-    <a class="b kot" href="https://s2.ta.kingoftime.jp/independent/recorder2/personal/" target="_blank" rel="noopener">KoT 純正ページで打刻する</a>
-    <a class="b open" id="openBtn" href="#">打刻コンソールを開く（再試行）</a>
-    <button onclick="location.reload()">接続を再確認</button>
+<div class="stage">
+
+  <div id="boot" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div class="sp"></div>
+    <p>自宅 Mac に接続しています…</p>
   </div>
-  <small>退勤リマインドは Pushover で届きます。打刻は上の KoT 純正でも可能です。</small>
+
+  <div id="wrap">
+    <img class="m" src="./mascot.png" alt="">
+    <h1>自宅 Mac に接続できません</h1>
+    <p>打刻コンソールは自宅 Mac が起動している時だけ開けます。<br>外出中などで Mac が休止していると、この画面になります。</p>
+    <div class="btns">
+      <a class="b kot" href="https://s2.ta.kingoftime.jp/independent/recorder2/personal/" target="_blank" rel="noopener">KoT 純正ページで打刻する</a>
+      <a class="b open" id="openBtn" href="#">打刻コンソールを開く（再試行）</a>
+      <button class="re" onclick="location.reload()">接続を再確認</button>
+    </div>
+    <small>退勤リマインドは Pushover で届きます。打刻は上の KoT 純正でも可能です。</small>
+  </div>
+
 </div>
 
 <script>
@@ -72,6 +94,8 @@ document.getElementById("openBtn").setAttribute("href", launcherURL());
 function showFallback(){
   document.getElementById("boot").style.display = "none";
   document.getElementById("wrap").style.display = "block";
+  var p = document.getElementById("pill");
+  p.textContent = "オフライン"; p.className = "pill off";
 }
 function goLauncher(){ location.replace(launcherURL()); }
 
@@ -83,6 +107,20 @@ function goLauncher(){ location.replace(launcherURL()); }
   fetch(MAC + "/health", { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
     .then(function(){ if(done) return; done=true; clearTimeout(to); goLauncher(); })
     .catch(function(){ if(done) return; done=true; clearTimeout(to); showFallback(); });
+})();
+
+// ヘッダの時刻・日付（ネットワーク不要＝最初の描画からアプリの見た目）
+(function(){
+  var WD=["日","月","火","水","木","金","土"];
+  function tick(){
+    var d=new Date();
+    document.getElementById("clock").textContent=
+      String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+    var p=function(n){return String(n).padStart(2,"0")};
+    document.getElementById("dateSub").textContent=
+      d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"（"+WD[d.getDay()]+"）";
+  }
+  tick(); setInterval(tick,15000);
 })();
 </script>
 </body>
