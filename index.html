@@ -103,7 +103,9 @@ function goLauncher(){ location.replace(launcherURL()); }
 (function(){
   var done = false;
   var ctrl = new AbortController();
-  var to = setTimeout(function(){ if(!done){ done=true; ctrl.abort(); showFallback(); } }, 4500);
+  // iPhone のセルラー＋Tailscale 冷えた状態の TLS ハンドシェイクは 5-9 秒かかることがあるため
+  // 4.5秒→10秒に延長（Mac が本当に止まっている時の待ち時間は少し増えるがその方が誤判定より良い）
+  var to = setTimeout(function(){ if(!done){ done=true; ctrl.abort(); showFallback(); } }, 10000);
   fetch(MAC + "/health", { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
     .then(function(){ if(done) return; done=true; clearTimeout(to); goLauncher(); })
     .catch(function(){ if(done) return; done=true; clearTimeout(to); showFallback(); });
