@@ -76,8 +76,9 @@
 </div>
 
 <script>
-// 自宅 Mac の受付（Tailscale Serve の HTTPS）
-var MAC = "https://athcl11227509.tail1e1da2.ts.net";
+// 常時稼働機の受付（Tailscale Serve の HTTPS）。
+// 2026-05-24 以降: Raspberry Pi 4（awoky-pi）に移行（Mac から）。
+var MAC = "https://awoky-pi.tail1e1da2.ts.net";
 // トークンは URL の # 以降（fragment＝静的ホストに送られない）から取得
 // ブックマーク例:  https://<gateway>/#t=<KOT_SECRET>
 var hp = new URLSearchParams((location.hash || "").replace(/^#/, ""));
@@ -99,16 +100,29 @@ function showFallback(){
 }
 function goLauncher(){ location.replace(launcherURL()); }
 
-// 生存確認: Mac receiver の /health へ no-cors fetch（到達=resolve, 不通=reject/timeout）
+// 生存確認: hidden iframe で /health をロード。iOS Safari の cross-origin fetch
+// (no-cors) は Private Network Access 系の制限で tailnet 宛が落ちることがあるが、
+// iframe はフルナビゲーション同様の経路を通る（「打刻コンソールを開く」ボタンが
+// 通るのと同じ仕組み）ので、ボタンが効く環境では必ず通る。
 (function(){
   var done = false;
-  var ctrl = new AbortController();
-  // iPhone のセルラー＋Tailscale 冷えた状態の TLS ハンドシェイクは 5-9 秒かかることがあるため
-  // 4.5秒→10秒に延長（Mac が本当に止まっている時の待ち時間は少し増えるがその方が誤判定より良い）
-  var to = setTimeout(function(){ if(!done){ done=true; ctrl.abort(); showFallback(); } }, 10000);
-  fetch(MAC + "/health", { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
-    .then(function(){ if(done) return; done=true; clearTimeout(to); goLauncher(); })
-    .catch(function(){ if(done) return; done=true; clearTimeout(to); showFallback(); });
+  var iframe = document.createElement("iframe");
+  iframe.style.cssText = "position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;visibility:hidden;border:0";
+  iframe.setAttribute("aria-hidden", "true");
+  var to = setTimeout(function(){
+    if (done) return;
+    done = true;
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    showFallback();
+  }, 10000);
+  iframe.onload = function(){
+    if (done) return;
+    done = true;
+    clearTimeout(to);
+    goLauncher();
+  };
+  document.body.appendChild(iframe);
+  iframe.src = MAC + "/health?_=" + Date.now();
 })();
 
 // ヘッダの時刻・日付（ネットワーク不要＝最初の描画からアプリの見た目）
