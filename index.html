@@ -58,13 +58,13 @@
 
   <div id="boot" style="display:flex;flex-direction:column;align-items:center;gap:12px">
     <div class="sp"></div>
-    <p>自宅 Mac に接続しています…</p>
+    <p>打刻サーバーに接続しています…</p>
   </div>
 
   <div id="wrap">
     <img class="m" src="./mascot.png" alt="">
-    <h1>自宅 Mac に接続できません</h1>
-    <p>打刻コンソールは自宅 Mac が起動している時だけ開けます。<br>外出中などで Mac が休止していると、この画面になります。</p>
+    <h1>自宅 Pi に接続できません</h1>
+    <p>Tailscale がオンになっているか確認してください。<br>Pi が停止している場合は KoT 純正で打刻できます。</p>
     <div class="btns">
       <a class="b kot" href="https://s2.ta.kingoftime.jp/independent/recorder2/personal/" target="_blank" rel="noopener">KoT 純正ページで打刻する</a>
       <a class="b open" id="openBtn" href="#">打刻コンソールを開く（再試行）</a>
@@ -114,7 +114,7 @@ function goLauncher(){ location.replace(launcherURL()); }
     done = true;
     if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
     showFallback();
-  }, 10000);
+  }, 20000);
   iframe.onload = function(){
     if (done) return;
     done = true;
