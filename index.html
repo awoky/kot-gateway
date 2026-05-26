@@ -137,11 +137,7 @@ var isStandalone = window.navigator.standalone === true;
     if (done) return;
     done = true;
     clearTimeout(to);
-    if (isStandalone) {
-      goLauncher(); // ホーム画面アイコンから → 即転送
-    } else {
-      showReady();  // Safari ブラウザから → 中間画面
-    }
+    goLauncher();
   };
   document.body.appendChild(iframe);
   iframe.src = MAC + "/health?_=" + Date.now();
