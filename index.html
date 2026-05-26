@@ -37,9 +37,11 @@
   a.b:active,button:active{opacity:.7}
   small{font-size:.72rem;opacity:.5;margin-top:4px;display:block}
   #wrap{display:none}
+  #ready{display:none}
   .sp{width:34px;height:34px;border:3px solid #1613104d;border-top-color:var(--ink);
     border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .pill.ok{border-color:var(--green);background:var(--green)}
 </style>
 </head>
 <body>
@@ -61,13 +63,21 @@
     <p>打刻サーバーに接続しています…</p>
   </div>
 
+  <div id="ready">
+    <img class="m" src="./mascot.png" alt="">
+    <h1>打刻サーバーに接続できました</h1>
+    <p style="opacity:.6;font-size:.8rem">このページをホーム画面に追加してから<br>「打刻コンソールを開く」を押してください</p>
+    <div class="btns">
+      <a class="b open" id="openBtn" href="#">打刻コンソールを開く</a>
+    </div>
+  </div>
+
   <div id="wrap">
     <img class="m" src="./mascot.png" alt="">
     <h1>自宅 Pi に接続できません</h1>
-    <p>Tailscale がオンになっているか確認してください。<br>Pi が停止している場合は KoT 純正で打刻できます。</p>
+    <p>Pi が停止している場合は KoT 純正で打刻できます。</p>
     <div class="btns">
       <a class="b kot" href="https://s2.ta.kingoftime.jp/independent/recorder2/personal/" target="_blank" rel="noopener">KoT 純正ページで打刻する</a>
-      <a class="b open" id="openBtn" href="#">打刻コンソールを開く（再試行）</a>
       <button class="re" onclick="location.reload()">接続を再確認</button>
     </div>
     <small>退勤リマインドは Pushover で届きます。打刻は上の KoT 純正でも可能です。</small>
@@ -99,11 +109,19 @@ function showFallback(){
   p.textContent = "オフライン"; p.className = "pill off";
 }
 function goLauncher(){ location.replace(launcherURL()); }
+function showReady(){
+  // Safari ブラウザから開いた場合: ホーム画面追加用の中間画面を表示
+  document.getElementById("boot").style.display = "none";
+  document.getElementById("ready").style.display = "block";
+  var p = document.getElementById("pill");
+  p.textContent = "接続OK"; p.className = "pill ok";
+}
 
-// 生存確認: hidden iframe で /health をロード。iOS Safari の cross-origin fetch
-// (no-cors) は Private Network Access 系の制限で tailnet 宛が落ちることがあるが、
-// iframe はフルナビゲーション同様の経路を通る（「打刻コンソールを開く」ボタンが
-// 通るのと同じ仕組み）ので、ボタンが効く環境では必ず通る。
+// ホーム画面アイコンからの起動かどうかを判定
+// standalone=true → ホーム画面から → 即リダイレクト
+// standalone=false → Safari ブラウザから → 中間画面（ホーム画面追加のため）
+var isStandalone = window.navigator.standalone === true;
+
 (function(){
   var done = false;
   var iframe = document.createElement("iframe");
@@ -119,7 +137,11 @@ function goLauncher(){ location.replace(launcherURL()); }
     if (done) return;
     done = true;
     clearTimeout(to);
-    goLauncher();
+    if (isStandalone) {
+      goLauncher(); // ホーム画面アイコンから → 即転送
+    } else {
+      showReady();  // Safari ブラウザから → 中間画面
+    }
   };
   document.body.appendChild(iframe);
   iframe.src = MAC + "/health?_=" + Date.now();
